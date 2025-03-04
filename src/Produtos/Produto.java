@@ -24,8 +24,10 @@ public abstract class Produto {
     public abstract String getTipo();
 
     public void setModelo(String novoModelo) {
+        this.modelo = novoModelo;
     }
 
     public void setCodigoDeBarras(String novoCodigoDeBarras) {
+        this.codigoDeBarras = novoCodigoDeBarras;
     }
 }

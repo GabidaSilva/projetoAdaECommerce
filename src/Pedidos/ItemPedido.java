@@ -16,4 +16,13 @@ public class ItemPedido {
     public Produto getProduto() { return produto; }
     public void setQuantidade(int quantidade) { this.quantidade = quantidade; }
     public double calcularTotal() { return precoVenda * quantidade; }
+
+    public int getQuantidade() {
+        return quantidade;
+    }
+
+    public double getPrecoVenda() {
+        return precoVenda;
+    }
+
 }

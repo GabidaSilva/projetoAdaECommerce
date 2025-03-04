@@ -170,12 +170,12 @@ public class Main {
         System.out.println("Pedido criado com sucesso!");
     }
 
-    private static void finalizarPedido() throws PagamentoException {
-        System.out.print("Digite o ID do pedido: ");
+    private static void finalizarPedido() {
+        System.out.println("Digite o ID do pedido:");
         int idPedido = scanner.nextInt();
-        scanner.nextLine();
+        scanner.nextLine(); // Consumir a nova linha
 
-        Pedido pedido = buscarPedidoPorId(idPedido);
+        Pedido pedido = encontrarPedidoPorId(idPedido);
         if (pedido == null) {
             System.out.println("Pedido não encontrado.");
             return;
@@ -186,26 +186,45 @@ public class Main {
         System.out.println("2. Pix");
         System.out.println("3. Cartão de Crédito");
         int opcaoPagamento = scanner.nextInt();
-        scanner.nextLine();
+        scanner.nextLine(); // Consumir a nova linha
 
         MetodoPagamento metodoPagamento;
         switch (opcaoPagamento) {
-            case 1 -> metodoPagamento = new Boleto();
-            case 2 -> metodoPagamento = new Pix();
-            case 3 -> metodoPagamento = new CartaoDeCredito();
-            default -> {
-                System.out.println("Opção inválida!");
+            case 1:
+                metodoPagamento = new Boleto();
+                break;
+            case 2:
+                metodoPagamento = new Pix();
+                break;
+            case 3:
+                metodoPagamento = new CartaoDeCredito();
+                break;
+            default:
+                System.out.println("Opção de pagamento inválida.");
                 return;
-            }
         }
 
-        pedido.finalizar(notificador);
-        if (metodoPagamento.processarPagamento(pedido.calcularTotal())) {
-            pedido.pagar(notificador);
-            System.out.println("Pedido finalizado e pago com sucesso!");
-        } else {
-            System.out.println("Falha no pagamento. Pedido não finalizado.");
+        try {
+            pedido.finalizar(notificador);
+            boolean pagamentoRealizado = metodoPagamento.processarPagamento(pedido.calcularTotal().doubleValue());
+            if (pagamentoRealizado) {
+                pedido.pagar(notificador);
+                System.out.println("Pedido finalizado e pago com sucesso!");
+            } else {
+                System.out.println("Falha no processamento do pagamento. O pedido não foi finalizado.");
+            }
+        } catch (IllegalStateException e) {
+            System.out.println("Erro ao finalizar o pedido: " + e.getMessage());
         }
+    }
+
+    private static Pedido encontrarPedidoPorId(int id) {
+        for (Pedido pedido : pedidos) {
+            if (pedido.getId() == id) {
+                return pedido;
+            }
+        }
+        return null;
     }
 
     private static void listarPedidos() {
@@ -220,23 +239,34 @@ public class Main {
     }
 
     private static void devolverProduto() {
+        System.out.print("Digite o ID do pedido: ");
+        int idPedido = scanner.nextInt();
+        scanner.nextLine();
+
+        Pedido pedido = buscarPedidoPorId(idPedido);
+        if (pedido == null) {
+            System.out.println("Pedido não encontrado.");
+            return;
+        }
+
         System.out.print("Digite o código de barras do produto a ser devolvido: ");
-        String codigoDeBarrasProduto = scanner.nextLine();
+        String codigoDeBarras = scanner.nextLine();
 
-        Produto produto = null;
+        Produto produto = buscarProdutoPorCodigoDeBarras(codigoDeBarras);
+        if (produto == null) {
+            System.out.println("Produto não encontrado.");
+            return;
+        }
 
-        for (Produto p : produtos) {
-            if (p.getCodigoDeBarras().equals(codigoDeBarrasProduto)) {
-                produto = p;
-                break;
-            }
-        }
-        if (produto != null) {
-            produto.devolver();
-            System.out.printf("\nProduto '%s' devolvido com sucesso!%n", produto.getModelo());
-        } else {
-            System.out.println("\nNão foi possível encontrar o produto para devolução.");
-        }
+        System.out.print("Digite a quantidade a ser devolvida: ");
+        int quantidade = scanner.nextInt();
+        scanner.nextLine();
+
+        pedido.removerItem(produto, quantidade);
+        produto.devolver();
+
+        System.out.println("Produto '" + produto.getModelo() + "' devolvido com sucesso!");
+        System.out.println("Novo total do pedido: R$ " + String.format("%.2f", pedido.calcularTotal()));
     }
     private static Cliente buscarClientePorId(String id) {
         for (Cliente cliente : clientes) {

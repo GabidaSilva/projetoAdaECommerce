@@ -41,6 +41,19 @@ public class Pedido {
         }
     }
 
+    public void removerItem(Produto produto, int quantidade) {
+        for (ItemPedido item : itens) {
+            if (item.getProduto().equals(produto)) {
+                if (item.getQuantidade() <= quantidade) {
+                    itens.remove(item);
+                } else {
+                    item.setQuantidade(item.getQuantidade() - quantidade);
+                }
+                break;
+            }
+        }
+    }
+
     public void alterarQuantidade(Produto produto, int novaQuantidade) {
         if (status.equals("Aberto")) {
             for (ItemPedido item : itens) {
@@ -56,13 +69,16 @@ public class Pedido {
     }
 
     public BigDecimal calcularTotal() {
-        return BigDecimal.valueOf( itens.stream().mapToDouble( ItemPedido::calcularTotal).sum() );
+        return itens.stream()
+                .map(item -> BigDecimal.valueOf(item.getPrecoVenda()).multiply(BigDecimal.valueOf(item.getQuantidade())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public void finalizar(Notificador notificador) {
-        if (calcularTotal().compareTo(BigDecimal.ZERO) > 0) {
+        BigDecimal total = calcularTotal();
+        if (total.compareTo(BigDecimal.ZERO) > 0) {
             status = "Aguardando pagamento";
-            notificador.notificar("Seu pedido foi finalizado e está aguardando pagamento.", cliente);
+            notificador.notificar("Seu pedido foi finalizado e está aguardando pagamento. Total: R$ " + total, cliente);
         } else {
             throw new IllegalStateException("Não é possível finalizar um pedido vazio ou com valor total zero.");
         }
