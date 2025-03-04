@@ -1,0 +1,11 @@
+package SistemaDePagamentos;
+
+public class PagamentoException extends Exception {
+    public PagamentoException(String message) {
+        super(message);
+    }
+
+    public PagamentoException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
